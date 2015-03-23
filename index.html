@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NJ Counties by Pop</title>
+  <style>
+  .county {
+    fill: #ccc;
+    border: 1px solid black;
+  }
+
+
+  .county a {
+    display:block;
+    background: #ccc;
+    border: 1px solid #333;
+    position: absolute;
+    float:left;
+    width: 100%;
+    height: 100%;
+    left: 100px;
+    top: 0;
+  }
+  </style>
+</head>
+<body>
+  <h1>NJ Counties by Relative Population Size</h1>
+  <div id="holder"></div>
+  <script src="d3.js"></script>
+  <script src="topojson.v1.js"></script>
+  <script>
+  function squareMe(val) {
+    return Math.sqrt(val);
+  }
+
+  var width = 960,
+    height = 1160;
+
+  var svg = d3.select('#holder').append('svg')
+      .attr('width', width)
+      .attr('height', height);
+
+  var projection = d3.geo.mercator()
+        .center([-74.67,40.09])
+        .scale(8600)
+        .translate([200,250]);
+
+  var path = d3.geo.path().projection(projection);
+
+  d3.json('nj_counties.json', function(err, nj) {
+    if (err) {return console.error(err);}
+
+    var counties = topojson.feature(nj, nj.objects.nj_counties);
+    svg.append('path')
+      .datum(counties)
+      .attr('d', path);
+
+  svg.selectAll('.county')
+    .data(topojson.feature(nj, nj.objects.nj_counties).features)
+  .enter().append('path')
+    .attr('class', function(d) {return 'county'})
+    .attr('d', path);
+  });
+
+/*
+  d3.csv('data.csv', function(d) {
+    d3.select('#holder').selectAll('a')
+      .data(d)
+      .enter()
+      .append('div')
+        .classed({county:true})
+        .style({width:function(i){
+          return squareMe(i.Population) / 10 + 'px';
+        }, height: function(i) {
+          return squareMe(i.Population) / 10 + 'px';
+        }})
+        .text(function(i) {
+          return i.County;
+        })
+        .append('a')
+        .attr('title', function(i) {return i.County});
+
+  });
+  */
+  </script>
+</body>
+</html>
