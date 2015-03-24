@@ -47,19 +47,23 @@
 
   var path = d3.geo.path().projection(projection);
 
-  d3.json('nj_counties.json', function(err, nj) {
+  d3.json('nj.json', function(err, nj) {
     if (err) {return console.error(err);}
 
-    var counties = topojson.feature(nj, nj.objects.nj_counties);
+    var counties = topojson.feature(nj, nj.objects.counties);
     svg.append('path')
       .datum(counties)
       .attr('d', path);
 
   svg.selectAll('.county')
-    .data(topojson.feature(nj, nj.objects.nj_counties).features)
+    .data(topojson.feature(nj, nj.objects.counties).features)
   .enter().append('path')
-    .attr('class', function(d) {return 'county'})
+    .attr('class', function(d) {return 'county ';})
+    .attr('data-name', function(d) {return d.properties.NAME;})
+    .attr('id', function(d) {return d.properties.COUNTYFP;})
     .attr('d', path);
+
+    console.log(nj);
   });
 
 /*
