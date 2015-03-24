@@ -5,21 +5,8 @@
   <title>NJ Counties by Pop</title>
   <style>
   .county {
-    fill: #ccc;
-    border: 1px solid black;
-  }
-
-
-  .county a {
-    display:block;
-    background: #ccc;
-    border: 1px solid #333;
-    position: absolute;
-    float:left;
-    width: 100%;
-    height: 100%;
-    left: 100px;
-    top: 0;
+    fill: #ece2f0;
+    border: 1px solid #eee;
   }
   </style>
 </head>
@@ -50,42 +37,46 @@
   d3.json('nj.json', function(err, nj) {
     if (err) {return console.error(err);}
 
-    var counties = topojson.feature(nj, nj.objects.counties);
+    var counties = topojson.feature(nj, nj.objects.counties),
+      geodata = topojson.feature(nj, nj.objects.counties).features,
+      popList = geodata.map(function(item) {return item['properties'].population;})
+      maxPop = d3.max(popList),
+      minPop = d3.min(popList),
+      popScale = d3.scale.linear().domain([minPop, maxPop]).range([5,30]);
+
     svg.append('path')
       .datum(counties)
       .attr('d', path);
 
-  svg.selectAll('.county')
-    .data(topojson.feature(nj, nj.objects.counties).features)
-  .enter().append('path')
-    .attr('class', function(d) {return 'county ';})
-    .attr('data-name', function(d) {return d.properties.NAME;})
-    .attr('id', function(d) {return d.properties.COUNTYFP;})
-    .attr('d', path);
+    svg.selectAll('.county')
+      .data(geodata)
+    .enter().append('path')
+      .attr('class', function(d) {return 'county ';})
+      .attr('data-name', function(d) {return d.properties.NAME;})
+      .attr('id', function(d) {return d.properties.COUNTYFP;})
+      .attr('d', path);
 
-    console.log(nj);
+    svg.selectAll('circle')
+      .data(geodata)
+    .enter().append('circle')
+      .attr('data-population', function(d) { return d.properties.population; })
+      .attr('r', function(d) {return popScale(d.properties.population);})
+      .attr('cx', function(d) {return projection(d3.geo.centroid(d))[0];})
+      .attr('cy', function(d) {return projection(d3.geo.centroid(d))[1];})
+      .attr('stroke', '#1c9099')
+      .style('fill', '#a6bddb');
+
+    svg.selectAll('text')
+      .data(geodata)
+    .enter().append('text')
+      .attr('text-anchor', 'middle')
+      .attr('x', function(d) {return projection(d3.geo.centroid(d))[0];})
+      .attr('y', function(d) {return projection(d3.geo.centroid(d))[1];})
+      .attr('font-family', 'sans-serif')
+      .attr('font-size', '10px')
+      .text(function(d) {return d.properties.NAME;});
   });
 
-/*
-  d3.csv('data.csv', function(d) {
-    d3.select('#holder').selectAll('a')
-      .data(d)
-      .enter()
-      .append('div')
-        .classed({county:true})
-        .style({width:function(i){
-          return squareMe(i.Population) / 10 + 'px';
-        }, height: function(i) {
-          return squareMe(i.Population) / 10 + 'px';
-        }})
-        .text(function(i) {
-          return i.County;
-        })
-        .append('a')
-        .attr('title', function(i) {return i.County});
-
-  });
-  */
   </script>
 </body>
 </html>
