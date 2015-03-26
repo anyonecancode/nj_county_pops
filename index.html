@@ -21,6 +21,11 @@
     font-size: 10px;
     alignment-baseline: central;
   }
+
+  path {
+    fill: #ccc;
+  }
+
   </style>
 </head>
 <body>
@@ -43,15 +48,26 @@
 
   var path = d3.geo.path().projection(projection);
 
-  d3.json('nj.json', function(err, nj) {
+  d3.json('nj.json', function(err, data) {
     if (err) {return console.error(err);}
 
-    var counties = topojson.feature(nj, nj.objects.counties),
-      geodata = topojson.feature(nj, nj.objects.counties).features,
+    var counties = topojson.feature(data, data.objects.nj),
+      geodata = topojson.feature(data, data.objects.nj).features,
       popList = geodata.map(function(item) {return item['properties'].population;})
       maxPop = d3.max(popList),
       minPop = d3.min(popList),
       popScale = d3.scale.linear().domain([minPop, maxPop]).range([5,30]);
+
+    var nyc = topojson.feature(data, data.objects.nyc),
+      philly = topojson.feature(data, data.objects.philly);
+
+    svg.append('path')
+      .datum(nyc)
+      .attr('d', path);
+
+    svg.append('path')
+      .datum(philly)
+      .attr('d', path);
 
     svg.append('path')
       .datum(counties)
