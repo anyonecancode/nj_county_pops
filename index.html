@@ -6,7 +6,9 @@
   <style>
   .county {
     fill: #ece2f0;
-    border: 1px solid #eee;
+    stroke: gray;
+    stroke-width: 1px;
+    stroke-opacity: 0.2;
   }
 
   .pop-circle {
@@ -22,8 +24,9 @@
     alignment-baseline: central;
   }
 
-  path {
-    fill: #ccc;
+  text.bordering {
+    fill: brown;
+    font-weight: bold;
   }
 
   </style>
@@ -58,20 +61,12 @@
       minPop = d3.min(popList),
       popScale = d3.scale.linear().domain([minPop, maxPop]).range([5,30]);
 
-    var nyc = topojson.feature(data, data.objects.nyc),
-      philly = topojson.feature(data, data.objects.philly);
+    var nyc = topojson.feature(data, data.objects.nyc).features,
+      philly = topojson.feature(data, data.objects.philly).features;
 
-    svg.append('path')
-      .datum(nyc)
-      .attr('d', path);
+    var centerNyc = projection(d3.geo.centroid(nyc[2])),
+        centerPhilly = projection(d3.geo.centroid(philly[0]));
 
-    svg.append('path')
-      .datum(philly)
-      .attr('d', path);
-
-    svg.append('path')
-      .datum(counties)
-      .attr('d', path);
 
     svg.selectAll('.county')
       .data(geodata)
@@ -112,6 +107,19 @@
         return centerY;
       })
       .text(function(d) {return d.properties.NAME;});
+
+    svg.append('text')
+      .datum(philly[0])
+      .attr('x', function(d) {return centerPhilly[0] - 25;})
+      .attr('y', function(d) {return centerPhilly[1];})
+      .attr('class', 'bordering')
+      .text('Phila.');
+
+    svg.append('text')
+      .attr('x', function(d) {return centerNyc[0] - 15;})
+      .attr('y', function(d) {return centerNyc[1];})
+      .attr('class', 'bordering')
+      .text('NYC');
   });
   </script>
 </body>
