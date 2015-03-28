@@ -4,6 +4,56 @@
   <meta charset="UTF-8">
   <title>NJ Counties by Pop</title>
   <style>
+
+  body {
+    font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
+  }
+
+  #map {
+    float:left;
+    height: 1160px;
+    width: 320px;
+  }
+
+  #map svg {
+    height:100%;
+    width: 100%;
+  }
+
+  #list {
+    float:left;
+  }
+
+  text {
+    color: #777;
+    font-size: 10px;
+    alignment-baseline: central;
+  }
+
+  text.bordering {
+    fill: brown;
+    font-weight: bold;
+  }
+
+  table {
+    border-collapse: collapse;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 12px;
+  }
+
+  td {
+    padding: 0.4em 1em;
+    text-align: left;
+  }
+
+  td.pop {
+    text-align: right;
+  }
+
+  tr {
+    border-bottom: 1px dashed #333;
+  }
+
   .county {
     fill: #ece2f0;
     stroke: gray;
@@ -17,37 +67,32 @@
     opacity: 0.6;
   }
 
-  text {
-    color: #777;
-    font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-size: 10px;
-    alignment-baseline: central;
-  }
-
-  text.bordering {
-    fill: brown;
-    font-weight: bold;
-  }
-
   </style>
 </head>
 <body>
-  <h1>NJ Counties by Relative Population Size</h1>
-  <div id="holder"></div>
+  <h1>Population of NJ Counties</h1>
+  <div id="map"></div>
+  <table id="list">
+    <thead>
+      <tr>
+        <th>County</th>
+        <th>Population</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
   <script src="d3.js"></script>
   <script src="topojson.v1.js"></script>
   <script>
-  var width = 960,
-    height = 1160;
 
-  var svg = d3.select('#holder').append('svg')
-      .attr('width', width)
-      .attr('height', height);
+  var table = d3.select('#list tbody');
+
+  var svg = d3.select('#map').append('svg');
 
   var projection = d3.geo.mercator()
         .center([-74.67,40.09])
         .scale(8600)
-        .translate([200,250]);
+        .translate([150,254]);
 
   var path = d3.geo.path().projection(projection);
 
@@ -59,13 +104,32 @@
       popList = geodata.map(function(item) {return item['properties'].population;})
       maxPop = d3.max(popList),
       minPop = d3.min(popList),
-      popScale = d3.scale.linear().domain([minPop, maxPop]).range([5,30]);
+      popScale = d3.scale.linear().domain([minPop, maxPop]).range([5,30]),
+      tableScale = d3.scale.linear().domain([0, maxPop]).range([0, 100]);
 
     var nyc = topojson.feature(data, data.objects.nyc).features,
       philly = topojson.feature(data, data.objects.philly).features;
 
     var centerNyc = projection(d3.geo.centroid(nyc[2])),
         centerPhilly = projection(d3.geo.centroid(philly[0]));
+
+    var tabledata = geodata.map(function(item) {
+      return [item.properties.NAME, item.properties.population];
+    }).sort(function(a,b) {
+      return d3.ascending(a[0], b[0]);
+    });
+
+    var thousands = d3.format(',d');
+
+    table.selectAll('tr')
+      .data(tabledata)
+    .enter()
+      .append('tr')
+      .html(function(d) {
+        var stop = tableScale(d[1]),
+          bg = 'background: linear-gradient(to left, #a6bddb 0%, #a6bddb ' + stop + '%, white ' + stop + 1 + '%, white 100%);';
+        return '<td>' + d[0] + '</td>' + '<td class="pop" style="'+bg+'">' + thousands(d[1]) + '</td>';
+      });
 
 
     svg.selectAll('.county')
